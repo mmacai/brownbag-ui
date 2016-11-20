@@ -1,0 +1,29 @@
+version: '2'
+services:
+    brownbag-db:
+        image: rethinkdb:2.3.5
+        container_name: brownbag-db
+        ports:
+            - 3030:8080
+
+    brownbag-service:
+        image: brownbag-service
+        container_name: brownbag-service
+        environment:
+            DB_HOST: brownbag-db:28015
+            # Important to set DOCKER_API_VERSION for docker client library, otherwise it may lead to error
+            DOCKER_API_VERSION: 1.24 # Client and Server version of docker has to match
+        ports:
+            - 7000:7000
+        depends_on:
+            - brownbag-db
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+
+    brownbag-ui:
+        image: brownbag-ui
+        container_name: brownbag-ui
+        ports:
+            - 4000:80
+        depends_on:
+            - brownbag-service
