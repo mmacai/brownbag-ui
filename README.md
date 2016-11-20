@@ -59,7 +59,8 @@ docker node update --availability drain node1
 # IP may again vary, check IP of node1
 docker run -d \
 -p 5000:8080 \
--v /var/run/docker.sock:/var/run/docker.sock \ manomarks/visualizer
+-v /var/run/docker.sock:/var/run/docker.sock \
+manomarks/visualizer
 ```
 
 #### Scale application across nodes
@@ -130,7 +131,6 @@ docker service create \
 docker service update \
     --env-add DB_REPLICAS=3 \
     --env-add DB_HOSTS=brownbag-db-secondary:28015,brownbag-db-primary:28015 \
-    --replicas 3 \
     brownbag-service
 
 # scale ui to 3 replicas
@@ -173,6 +173,30 @@ docker service ps brownbag-service
 docker service update \
     --restart-condition on-failure \
     brownbag-service
+```
+
+#### We are ready to start everything globally, because we know what's going on
+
+```sh
+# use --mode global which will start services on each node evenly
+# --replicas option is not available here
+docker service create \
+    --name brownbag-service \
+    -p 7000:7000 \
+    --mount target=/var/run/docker.sock,source=/var/run/docker.sock,type=bind \
+    -e DB_HOSTS=brownbag-db-secondary:28015,brownbag-db-primary:28015 \
+    -e DOCKER_API_VERSION=1.24 \
+    -e IMAGE_NAME_SERVICE=mariomacai/brownbag-service \
+    --mode global \
+    --network brownbag-network \
+    mariomacai/brownbag-service:1.0.0
+
+docker service create \
+    --name brownbag-ui \
+    -p 4000:80 \
+    --mode global \
+    --network brownbag-network \
+    mariomacai/brownbag-ui:1.0.0
 ```
 
 ## Build setup
