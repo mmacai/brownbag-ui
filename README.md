@@ -115,6 +115,9 @@ docker service create \
 # 192.168.99.100:3030
 # 192.168.99.100:3031
 
+#############################
+# !!! OPTIONAL STEP START !!!
+# RethinkDB setup is just fine for us, but if you want to play more with DB you can complete following step
 # we need to recreate first set of databases to join the second one, otherwise cluster would be broken on failover
 docker service rm brownbag-db-primary
 
@@ -124,6 +127,8 @@ docker service create \
     --network brownbag-network \
     rethinkdb:2.3.5 \
     rethinkdb --bind all -j brownbag-db-secondary
+# !!! OPTIONAL STEP END !!!
+#############################
 
 # modify service to use all 3 replicas
 # service will automatically reconfigure table to use them on restart
@@ -178,6 +183,9 @@ docker service update \
 #### We are ready to start everything globally, because we know what's going on
 
 ```sh
+# firstly remove already running brownbag-ui and brownbag-service replicas
+docker service rm brownbag-ui brownbag-service
+
 # use --mode global which will start services on each node evenly
 # --replicas option is not available here
 docker service create \
